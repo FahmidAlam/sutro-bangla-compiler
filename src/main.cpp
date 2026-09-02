@@ -1,6 +1,6 @@
 // Driver: reads a .sutro file, runs the phases the user asked for, prints the result.
 //
-//   sutro <file.sutro> [--emit=tokens|ast]
+//   sutro <file.sutro> [--emit=tokens|ast|sym]
 //
 // --emit stops the pipeline after a phase and dumps what that phase produced. It
 // is how we debug, and how any team member can show any phase during a review.
@@ -16,6 +16,7 @@
 #include "diagnostics.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "sema.hpp"
 #include "source.hpp"
 #include "token.hpp"
 #include "utf8.hpp"
@@ -33,22 +34,6 @@ void printUsage() {
         "  -h, --help      show this message\n";
 }
 
-// Counts visible characters so a Bangla lexeme can be padded like an ASCII one.
-std::size_t visibleWidth(const std::string& s) {
-    std::size_t n = 0;
-    for (std::size_t i = 0; i < s.size();) {
-        const auto d = sutro::utf8::decode(s, i);
-        if (!sutro::utf8::isCombiningMark(d.cp)) ++n;
-        i += static_cast<std::size_t>(d.bytes);
-    }
-    return n;
-}
-
-std::string padTo(const std::string& s, std::size_t width) {
-    const std::size_t w = visibleWidth(s);
-    return w >= width ? s : s + std::string(width - w, ' ');
-}
-
 void dumpTokens(const std::vector<sutro::Token>& tokens) {
     for (const sutro::Token& t : tokens) {
         const std::string pos = std::to_string(t.line) + ":" + std::to_string(t.column);
@@ -56,9 +41,9 @@ void dumpTokens(const std::vector<sutro::Token>& tokens) {
         if (t.kind == sutro::TokenKind::IntLiteral)   value = std::to_string(t.intValue);
         if (t.kind == sutro::TokenKind::FloatLiteral) value = std::to_string(t.floatValue);
 
-        std::cout << "  " << padTo(pos, 8)
-                  << padTo(sutro::tokenKindName(t.kind), 8)
-                  << padTo(value, 10)
+        std::cout << "  " << sutro::utf8::padTo(pos, 8)
+                  << sutro::utf8::padTo(sutro::tokenKindName(t.kind), 8)
+                  << sutro::utf8::padTo(value, 10)
                   << t.lexeme << "\n";
     }
 }
@@ -117,10 +102,22 @@ int main(int argc, char** argv) {
     }
 
     sutro::Parser parser(tokens, diagnostics);
-    const sutro::Program program = parser.parse();
+    sutro::Program program = parser.parse();
+
+    // Semantic analysis is skipped when the program did not parse cleanly: the
+    // tree is missing whatever the parser threw away, so every name it dropped
+    // would come back as a bogus "undeclared" on top of the real syntax error.
+    sutro::SemanticAnalyzer sema(diagnostics);
+    if (!diagnostics.hasErrors()) sema.analyze(program);
 
     if (emit == "ast") {
         sutro::printAst(program, std::cout);
+        diagnostics.printAll(source, std::cerr);
+        return diagnostics.hasErrors() ? 1 : 0;
+    }
+
+    if (emit == "sym") {
+        sema.symbols().print(std::cout);
         diagnostics.printAll(source, std::cerr);
         return diagnostics.hasErrors() ? 1 : 0;
     }
@@ -130,7 +127,7 @@ int main(int argc, char** argv) {
         return 2;
     }
 
-    // Later phases arrive here: semantic analysis, IR, code generation.
+    // Later phases arrive here: IR construction, then code generation.
     diagnostics.printAll(source, std::cerr);
     if (diagnostics.hasErrors()) return 1;
 
