@@ -11,6 +11,7 @@ const char* exprKindName(ExprKind kind) {
         case ExprKind::Name:     return "Name";
         case ExprKind::Unary:    return "Unary";
         case ExprKind::Binary:   return "Binary";
+        case ExprKind::Widen:    return "Widen";
     }
     return "?";
 }
@@ -49,6 +50,7 @@ void printExpr(const Expr* e, std::ostream& out, int depth) {
         case ExprKind::Name:     out << " " << e->name;       break;
         case ExprKind::Unary:
         case ExprKind::Binary:   out << " " << e->token.lexeme; break;
+        case ExprKind::Widen:    break;   // the ": দশমিক" below says it all
     }
 
     // Empty until the semantic analyser runs, which makes it obvious in the dump

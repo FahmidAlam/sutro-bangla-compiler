@@ -28,7 +28,14 @@ enum class ExprKind {
     FloatLit,   // ১.৫
     Name,       // ক
     Unary,      // -ক
-    Binary      // ক + ২,  ক > ০
+    Binary,     // ক + ২,  ক > ০
+
+    // int -> float conversion, wrapping its operand in `lhs`. The parser never
+    // builds one: the semantic analyser inserts it wherever an int meets a float,
+    // so the widening is a visible node in the tree rather than a rule each
+    // backend has to remember. An emitter that had to infer casts would be one
+    // more place for Java and Python to disagree.
+    Widen
 };
 
 struct Expr {
@@ -63,6 +70,7 @@ struct Stmt {
 
     TokenKind declaredType = TokenKind::Error;   // Declare: KwPurno or KwDoshomik
     std::string name;                            // Declare, Assign
+    Token nameToken;                             // Declare, Assign: for the error caret
 
     ExprPtr value;                // Declare/Assign right-hand side, Print argument,
                                   // If/While condition

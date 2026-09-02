@@ -141,6 +141,7 @@ StmtPtr Parser::declaration() {
         "টাইপের পরে একটি নাম দরকার",
         "যেমন: " + s->token.lexeme + " ক = ১০।");
     s->name = name.lexeme;
+    s->nameToken = name;
 
     expect(TokenKind::Assign, "P03", "নাম ও মানের মাঝে '=' দরকার",
            "ঘোষণার সময় একটি প্রাথমিক মান দিতে হয়");
@@ -156,6 +157,7 @@ StmtPtr Parser::assignment() {
     s->kind = StmtKind::Assign;
     s->token = advance();                    // the name
     s->name = s->token.lexeme;
+    s->nameToken = s->token;
 
     expect(TokenKind::Assign, "P03", "নামের পরে '=' দরকার",
            "মান বসাতে হলে লিখুন: " + s->name + " = ...।");
