@@ -98,5 +98,23 @@ std::string toBanglaDigits(long long n) {
     return out;
 }
 
+// Column width in visible characters. A Bangla letter is three bytes and a matra
+// takes no column of its own, so neither .size() nor a codepoint count would line
+// a table up correctly.
+std::size_t visibleWidth(const std::string& s) {
+    std::size_t n = 0;
+    for (std::size_t i = 0; i < s.size();) {
+        const Decoded d = decode(s, i);
+        if (!isCombiningMark(d.cp)) ++n;
+        i += static_cast<std::size_t>(d.bytes);
+    }
+    return n;
+}
+
+std::string padTo(const std::string& s, std::size_t width) {
+    const std::size_t w = visibleWidth(s);
+    return w >= width ? s + " " : s + std::string(width - w, ' ');
+}
+
 } // namespace utf8
 } // namespace sutro

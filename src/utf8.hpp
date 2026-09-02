@@ -43,5 +43,11 @@ bool isSpace(char32_t cp);
 // 12 -> "১২". Line and column numbers are shown in Bangla in Bangla messages.
 std::string toBanglaDigits(long long n);
 
+// Table alignment for --emit dumps: width is counted in visible characters, and
+// padTo always leaves at least one space so an over-long cell cannot run into the
+// next column.
+std::size_t visibleWidth(const std::string& s);
+std::string padTo(const std::string& s, std::size_t width);
+
 } // namespace utf8
 } // namespace sutro
