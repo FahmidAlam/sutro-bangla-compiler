@@ -1,0 +1,27 @@
+# ---- build output ----
+build/
+out/
+*.o
+*.exe
+*.obj
+*.pdb
+*.class
+
+# ---- editor / OS ----
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+
+# ---- Word lock files ----
+~$*
+
+# ---- tooling notes, not part of the submission ----
+CLAUDE.md
+.claude/
+deck-src/
+friend-project-starter/
+
+# ---- superseded / broken drafts, not part of the submission ----
+Bangla-Programming..pptx
+Shutro - CSE-4114 Project Presentation.docx
