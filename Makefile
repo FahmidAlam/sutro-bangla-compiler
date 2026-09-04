@@ -1,4 +1,4 @@
-# সূত্র / Shutro — build
+# সূত্র / Shutro — build by Team Scorpion
 #
 #   make            build build/sutro.exe
 #   make clean      remove build output
